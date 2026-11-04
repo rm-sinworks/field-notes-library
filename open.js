@@ -26,10 +26,14 @@
       else urls[name]=URL.createObjectURL(new Blob([data],{type}));
     }
     if(offset!==opened.byteLength) throw Error();
+    const [,stage,flag,values]=location.hash.slice(1).split("/");
+    const carry=flag==="carry"?(values||"").split(",").filter(value=>/^[a-z0-9-]{1,48}$/.test(value)).slice(0,64):[];
+    if(flag==="carry")history.replaceState(null,"","#"+encoded+"/"+(stage||""));
     window.privatePage=Object.freeze({
       file:name=>urls[name],
       go:id=>"#"+encoded+"/"+id,
-      step:()=>location.hash.slice(1).split("/")[1]||""
+      step:()=>location.hash.slice(1).split("/")[1]||"",
+      carry
     });
     // Only use markup and script whose GCM authentication just succeeded.
     const template=document.createElement("template");template.innerHTML=docs.html;
