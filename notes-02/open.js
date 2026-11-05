@@ -10,7 +10,7 @@
     message.textContent = 'Opening guide…';
     const raw = Uint8Array.from(atob(token.replace(/-/g, '+').replace(/_/g, '/') + '='), ch => ch.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
-    const revisions = {page:'b5e093fd52ece7da', paper:'81a59a2aa5881f8d'};
+    const revisions = {page:'48e3ed7552b1ec21', paper:'3976740e385e9063'};
     async function openFile(kind, signal) {
       const reply = await fetch(`./${kind}.dat?v=${revisions[kind]}`, {credentials:'omit', referrerPolicy:'no-referrer', cache:'no-cache', signal});
       if (!reply.ok) throw new Error('File unavailable');
@@ -27,7 +27,7 @@
     if (scripts.length !== 1 || !approved) throw new Error('Unrecognized guide program');
     const program = approved.textContent;
     const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(program)));
-    const pin = 'sha256-vIq9Yi6DNf0KutcTXgLVU/+T6keousFIxf02pqo4Rs0=';
+    const pin = 'sha256-wy5Nej/YzP9wif4C2XdgM3Hggcn5XhvbV1li4m2JpcU=';
     if ('sha256-' + btoa(String.fromCharCode(...hash)) !== pin) throw new Error('Guide viewer version mismatch');
     for (const script of doc.querySelectorAll('script')) script.remove();
     const noReferrer = doc.createElement('meta');
