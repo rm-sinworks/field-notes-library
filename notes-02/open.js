@@ -10,9 +10,9 @@
     message.textContent = 'Opening guide…';
     const raw = Uint8Array.from(atob(token.replace(/-/g, '+').replace(/_/g, '/') + '='), ch => ch.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
-    const revisions = {page:'69deed472a0b10ee', paper:'a18ecc41c21bc457'};
-    async function openFile(kind) {
-      const reply = await fetch(`./${kind}.dat?v=${revisions[kind]}`, {credentials:'omit', referrerPolicy:'no-referrer', cache:'no-cache'});
+    const revisions = {page:'b5e093fd52ece7da', paper:'81a59a2aa5881f8d'};
+    async function openFile(kind, signal) {
+      const reply = await fetch(`./${kind}.dat?v=${revisions[kind]}`, {credentials:'omit', referrerPolicy:'no-referrer', cache:'no-cache', signal});
       if (!reply.ok) throw new Error('File unavailable');
       const bytes = new Uint8Array(await reply.arrayBuffer());
       const aad = new TextEncoder().encode(`notes-02:${kind}:v1`);
@@ -27,7 +27,7 @@
     if (scripts.length !== 1 || !approved) throw new Error('Unrecognized guide program');
     const program = approved.textContent;
     const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(program)));
-    const pin = 'sha256-Bw6CME8Vvwp0eKbL8dCc6zViILIMqWTp6O8nCbygFKM=';
+    const pin = 'sha256-vIq9Yi6DNf0KutcTXgLVU/+T6keousFIxf02pqo4Rs0=';
     if ('sha256-' + btoa(String.fromCharCode(...hash)) !== pin) throw new Error('Guide viewer version mismatch');
     for (const script of doc.querySelectorAll('script')) script.remove();
     const noReferrer = doc.createElement('meta');
@@ -48,16 +48,35 @@
     frame.src = URL.createObjectURL(new Blob(['<!doctype html>', doc.documentElement.outerHTML], {type:'text/html;charset=utf-8'}));
     document.querySelector('#locked').hidden = true;
     frame.hidden = false; document.querySelector('#actions').hidden = false;
-    try {
-      const pdf = await openFile('paper');
-      const href = URL.createObjectURL(new Blob([pdf], {type:'application/pdf'}));
-      for (const link of document.querySelectorAll('#open-pdf, #save-pdf')) {
-        link.href = href; link.hidden = false;
+    const prepare = document.querySelector('#prepare-pdf'), status = document.querySelector('#pdf-status');
+    prepare.addEventListener('click', async () => {
+      if (prepare.disabled) return;
+      prepare.disabled = true;
+      prepare.textContent = 'Preparing PDF…';
+      status.textContent = '';
+      const controller = new AbortController();
+      // The printable maps can take several minutes on a slow mobile link.
+      const timeout = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+      try {
+        const pdf = await openFile('paper', controller.signal);
+        const href = URL.createObjectURL(new Blob([pdf], {type:'application/pdf'}));
+        for (const link of document.querySelectorAll('#open-pdf, #save-pdf')) {
+          link.href = href; link.hidden = false;
+        }
+        // Real links preserve a fresh user gesture in Safari even after a long fetch.
+        prepare.hidden = true;
+        status.textContent = 'PDF ready.';
+        if (document.activeElement === prepare || document.activeElement === document.body) {
+          document.querySelector('#open-pdf').focus({preventScroll:true});
+        }
+      } catch {
+        status.textContent = 'Couldn’t load the PDF.';
+        prepare.textContent = 'Retry PDF';
+        prepare.disabled = false;
+      } finally {
+        clearTimeout(timeout);
       }
-      document.querySelector('#pdf-status').hidden = true;
-    } catch {
-      document.querySelector('#pdf-status').textContent = 'PDF unavailable. Reload to try again.';
-    }
+    });
   } catch {
     message.textContent = 'This private guide could not be opened. Check that you copied the full link.';
   }
