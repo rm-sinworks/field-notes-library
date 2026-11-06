@@ -1,0 +1,13 @@
+:root { color-scheme:light; font:16px/1.45 system-ui,sans-serif; color:#24372f; background:#f0f1e8 }
+* { box-sizing:border-box }
+[hidden] { display:none!important }
+body { margin:0; height:100vh; height:100dvh; display:flex; flex-direction:column }
+main { margin:10vh auto; padding:1.2rem; width:min(36rem,100%) }
+h1 { margin:.1rem 0 }
+header { display:flex; flex:none; justify-content:flex-end; align-items:center; gap:.8rem; min-height:36px; padding:0 max(.65rem,env(safe-area-inset-right)); border-bottom:1px solid #ced5c7; background:#f0f1e8 }
+header p { margin:0; font-size:.8rem }
+header a, header button { color:#315848; font-size:.78rem; text-underline-offset:.2em; display:grid; align-items:center; min-height:36px; padding:0 .2rem }
+header button { background:transparent; border:0; cursor:pointer; font-family:inherit; text-decoration:underline }
+header button:disabled { color:#54685d; cursor:progress; text-decoration:none }
+header :is(a,button):focus-visible { outline:2px solid #315848 }
+iframe { border:0; width:100%; flex:1; min-height:0; color-scheme:normal }
